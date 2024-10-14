@@ -1,0 +1,7 @@
+Flask
+requests
+opencv-python
+ultralytics
+Pillow  # Required for image handling
+#pip install -r requirements.txt
+#pip install Flask requests opencv-python ultralytics Pillow
