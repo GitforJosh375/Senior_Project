@@ -1,10 +1,8 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 import os
 from ultralytics import YOLO
 import cv2
-import numpy as np
-from PIL import Image
-import io
+import requests
 
 app = Flask(__name__)
 
@@ -48,19 +46,24 @@ def upload_image():
 
         print(f"Number of cars detected: {car_count}")
 
-        # Visualize the detections on the image
-        annotated_img = results[0].plot()
+        # Send a POST request to update car count on the remote server
+        detection_url = 'http://67.43.244.153:3001/detection'  # Replace with your server's IP address
+        detection_data = {'count': car_count}
+        
+        try:
+            # Send the car count as a POST request
+            detection_response = requests.post(detection_url, json=detection_data)
+            
+            # Check if the request was successful
+            if detection_response.status_code == 200:
+                print(f"Car count successfully updated on the server: {detection_response.json()}")
+            else:
+                print(f"Failed to update car count. Status code: {detection_response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending POST request to /detection: {e}")
 
-        # Convert the OpenCV image (numpy array) to a PIL image for sending as a response
-        pil_img = Image.fromarray(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB))
-
-        # Save the image into a BytesIO object (in-memory buffer)
-        img_io = io.BytesIO()
-        pil_img.save(img_io, 'JPEG')
-        img_io.seek(0)
-
-        # Send the image back to the client
-        return send_file(img_io, mimetype='image/jpeg')
+        # Return a simple response that the image was processed and car count updated
+        return jsonify({'message': 'Image processed and car count updated successfully', 'car_count': car_count})
 
 
 if __name__ == "__main__":

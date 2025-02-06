@@ -1,5 +1,5 @@
 import requests
 
-stop_command = {'command': 'shutdown'}
-response = requests.post('http://<your_server_ip>:5000/command', json=stop_command)
+stop_command = {'command': 'stop'}
+response = requests.post('http://67.43.244.153:5000/command', json=stop_command)
 print(response.json())
