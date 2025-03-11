@@ -41,7 +41,7 @@ def upload_image():
         
 
         # Send a POST request to update car count on the remote server
-        detection_url = 'https://sw-server-bgez.onrender.com'  # Replace with your server's IP address
+        detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'  # Replace with your server's IP address
         detection_data = {'count': car_count}
         
         try:
