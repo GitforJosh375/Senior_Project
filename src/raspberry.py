@@ -21,7 +21,7 @@ LED_PINS = {
 def setup_gpio():
     for pin in LED_PINS.values():
         GPIO.setup(pin, GPIO.OUT)
-        GPIO.output(pin, GPIO.LOW)  # Set initial state to LOW (off)
+        GPIO.output(pin, GPIO.HIGH)  # Set initial state to LOW (off)
 
 # Server URL for fetching commands and uploading images
 server_command_url = 'http://67.43.244.153:3001/command'  # Replace <your_server_ip>
@@ -33,15 +33,15 @@ capture_images = False  # Initially set to False to prevent capturing
 def energize_leds(car_count):
     # Turn off all LEDs first
     for pin in LED_PINS.values():
-        GPIO.output(pin, GPIO.LOW)
+        GPIO.output(pin, GPIO.HIGH)
 
     # Energize the corresponding LED based on the car count
     if car_count == 0:  # All spots filled
-        GPIO.output(LED_PINS['full'], GPIO.HIGH)
+        GPIO.output(LED_PINS['full'], GPIO.LOW)
     elif car_count <= 10:  # 10 or fewer spots available
-        GPIO.output(LED_PINS['ten_or_less'], GPIO.HIGH)
+        GPIO.output(LED_PINS['ten_or_less'], GPIO.LOW)
     else:  # More than 10 spots available
-        GPIO.output(LED_PINS['more_than_ten'], GPIO.HIGH)
+        GPIO.output(LED_PINS['more_than_ten'], GPIO.LOW)
 
 def capture_and_send_image():
     global capture_images  # Access the global variable
@@ -102,7 +102,7 @@ def fetch_server_commands():
             print(f"Error fetching command: {e}")
 
         # Poll every 5 seconds (adjust as needed)
-        time.sleep(5)
+        time.sleep(20)
 
 if __name__ == "__main__":
     setup_gpio()  # Initialize GPIO pins at startup
