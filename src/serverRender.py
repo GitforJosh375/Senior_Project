@@ -59,7 +59,7 @@ def upload_image():
         # Return a simple response that the image was processed and car count updated
         return jsonify({'car_count': car_count, 'message': 'Detection complete'}), 200
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     # Bind to the port Render provides
-    port = int(os.getenv("PORT", 5000))  # Default to 5000 if PORT is not set
-    app.run(host="0.0.0.0", port=port)
+    #port = int(os.getenv("PORT", 5000))  # Default to 5000 if PORT is not set
+    #app.run(host="0.0.0.0", port=port)
