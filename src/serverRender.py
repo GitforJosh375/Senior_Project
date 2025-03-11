@@ -1,6 +1,7 @@
 import requests
 import cv2
 import numpy as np
+import os
 from flask import Flask, request, jsonify
 from ultralytics import YOLO  # Make sure you have ultralytics installed
 
@@ -38,16 +39,15 @@ def upload_image():
                     car_count += 1
 
         print(f"Number of cars detected: {car_count}")
-        
 
         # Send a POST request to update car count on the remote server
         detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'  # Replace with your server's IP address
         detection_data = {'count': car_count}
-        
+
         try:
             # Send the car count as a POST request
             detection_response = requests.post(detection_url, json=detection_data)
-            
+
             # Check if the request was successful
             if detection_response.status_code == 200:
                 print(f"Car count successfully updated on the server: {detection_response.json()}")
@@ -59,7 +59,7 @@ def upload_image():
         # Return a simple response that the image was processed and car count updated
         return jsonify({'car_count': car_count, 'message': 'Detection complete'}), 200
 
-
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    # Bind to the port Render provides
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 if PORT is not set
+    app.run(host="0.0.0.0", port=port)

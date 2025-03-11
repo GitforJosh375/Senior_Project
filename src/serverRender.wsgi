@@ -1,4 +1,4 @@
 from serverRender import app
 
-if __name__ == "__main__":
-    app.run()
+# Gunicorn requires a callable application variable
+application = app
