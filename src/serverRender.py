@@ -10,6 +10,10 @@ app = Flask(__name__)
 # Initialize YOLOv8 model
 model = YOLO("yolov8n.pt")  # Use the appropriate YOLOv8 model
 
+@app.route('/')
+def home():
+    return 'Welcome to the Car Detection API! Use /upload to send images.'
+
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'file' not in request.files:
