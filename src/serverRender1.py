@@ -45,14 +45,14 @@ def upload_image():
         print(f"Number of cars detected: {car_count}")
 
         # Send the car count to the remote server
-        detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'
-        detection_data = {'count': car_count}
+        #detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'
+        #detection_data = {'count': car_count}
 
-        try:
-            detection_response = requests.post(detection_url, json=detection_data)
-            print(f"Server Response: {detection_response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error sending POST request: {e}")
+       # try:
+            #detection_response = requests.post(detection_url, json=detection_data)
+           # print(f"Server Response: {detection_response.status_code}")
+        #except requests.exceptions.RequestException as e:
+            #print(f"Error sending POST request: {e}")
 
         # Free memory
         del img, np_array, results  
