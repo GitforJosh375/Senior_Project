@@ -1,69 +1,76 @@
-import requests
+import psutil
+import os
 import cv2
 import numpy as np
-import os
+import requests
 from flask import Flask, request, jsonify
-from ultralytics import YOLO  # Make sure you have ultralytics installed
+from ultralytics import YOLO
 
 app = Flask(__name__)
 
-# Initialize YOLOv8 model
-model = YOLO("yolov8n.pt")  # Use the appropriate YOLOv8 model
+def log_memory():
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / 1024 / 1024  # MB
+    print(f"Memory usage: {mem:.2f} MB")
+
+print("Starting app...")
+log_memory()
+
+model = YOLO("yolov8n.pt")
+print("Model loaded")
+log_memory()
 
 @app.route('/')
 def home():
+    log_memory()
     return 'Welcome to the Car Detection API! Use /upload to send images.'
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
+    log_memory()
     if 'file' not in request.files:
         return jsonify({'message': 'No file part'}), 400
 
     file = request.files['file']
-
     if file.filename == '':
         return jsonify({'message': 'No selected file'}), 400
 
-    if file:
-        # Read the image directly from the uploaded file without saving it
-        image_bytes = file.read()
-        np_array = np.frombuffer(image_bytes, np.uint8)  # Convert to numpy array
-        img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)  # Decode the image
+    # Limit file size to 2MB
+    image_bytes = file.read()
+    if len(image_bytes) > 2 * 1024 * 1024:
+        return jsonify({'message': 'File too large, max 2MB'}), 400
+    log_memory()
 
-        # Run YOLOv8 inference
-        results = model(img)
+    np_array = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    log_memory()
 
-        # Initialize a counter for the number of cars detected
-        car_count = 0
-        for result in results:
-            for box in result.boxes:
-                class_index = int(box.cls)
-                class_name = model.names[class_index]
-                if class_name == 'car':
-                    car_count += 1
+    img = cv2.resize(img, (416, 416))
+    log_memory()
 
-        print(f"Number of cars detected: {car_count}")
+    results = model.predict(img, device='cpu', half=True)
+    log_memory()
 
-        # Send a POST request to update car count on the remote server
-        detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'  # Replace with your server's IP address
-        detection_data = {'count': car_count}
+    car_count = sum(
+        1 for result in results for box in result.boxes
+        if model.names[int(box.cls)] == 'car'
+    )
+    print(f"Number of cars detected: {car_count}")
+    log_memory()
 
-        try:
-            # Send the car count as a POST request
-            detection_response = requests.post(detection_url, json=detection_data)
+    detection_url = 'https://sw-server-bgez.onrender.com/detection/detection'
+    detection_data = {'count': car_count}
+    try:
+        detection_response = requests.post(detection_url, json=detection_data, timeout=10)
+        print(f"Server Response: {detection_response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending POST request: {e}")
+    log_memory()
 
-            # Check if the request was successful
-            if detection_response.status_code == 200:
-                print(f"Car count successfully updated on the server: {detection_response.json()}")
-            else:
-                print(f"Failed to update car count. Status code: {detection_response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error sending POST request to /detection: {e}")
+    del img, np_array, results
+    log_memory()
 
-        # Return a simple response that the image was processed and car count updated
-        return jsonify({'car_count': car_count, 'message': 'Detection complete'}), 200
+    return jsonify({'count': car_count}), 200
 
-#if __name__ == '__main__':
-    # Bind to the port Render provides
-    #port = int(os.getenv("PORT", 5000))  # Default to 5000 if PORT is not set
-    #app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
